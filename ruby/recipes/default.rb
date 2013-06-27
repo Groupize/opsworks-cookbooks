@@ -65,6 +65,12 @@ execute "Install Ruby #{node[:ruby][:full_version]}" do
   end
 end
 
+include_recipe 'ruby_build'
+
+ruby_build_ruby node[:ruby][:version] do
+  prefix_path "/usr/local/bin"
+end
+
 execute 'Delete downloaded ruby packages' do
   command "rm -vf /tmp/#{node[:ruby][:deb]} /tmp/#{node[:ruby][:rpm]}"
   only_if do
