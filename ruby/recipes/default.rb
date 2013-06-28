@@ -67,16 +67,8 @@ end
 
 include_recipe 'ruby_build'
 
-ruby_build_ruby node[:ruby][:version] do
+ruby_build_ruby "#{node[:ruby][:full_version]}-#{node[:ruby][:patch]}" do
   prefix_path "/usr/local/bin"
-end
-
-execute 'Delete downloaded ruby packages' do
-  command "rm -vf /tmp/#{node[:ruby][:deb]} /tmp/#{node[:ruby][:rpm]}"
-  only_if do
-     ::File.exists?("/tmp/#{node[:ruby][:deb]}") ||
-     ::File.exists?("/tmp/#{node[:ruby][:rpm]}")
-   end
 end
 
 include_recipe 'opsworks_rubygems'
