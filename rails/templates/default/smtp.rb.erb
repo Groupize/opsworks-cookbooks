@@ -1,0 +1,11 @@
+if Rails.env.staging? || Rails.env.production?
+  SMTP_SETTINGS = {
+    address: @smtp[:smtp_address],
+    authentication: :login,
+    domain: @smtp[:smtp_domain],
+    password: @smtp[:smtp_password],
+    port: 587,
+    user_name: @smtp[:smtp_username],
+    enable_starttls_auto: true
+  }
+end
