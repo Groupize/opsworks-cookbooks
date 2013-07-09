@@ -6,6 +6,7 @@ if Rails.env.staging? || Rails.env.production?
     password: @smtp[:smtp_password],
     port: 587,
     user_name: @smtp[:smtp_username],
-    enable_starttls_auto: true
+    enable_starttls_auto: true,
+    foo: "bar"
   }
 end
