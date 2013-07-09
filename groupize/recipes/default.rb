@@ -1,3 +1,21 @@
+Chef::Log.info("sourcing SMTP initializer")
+node[:deploy].each do |application, deploy|
+  template "#{deploy[:deploy_to]}/current/config/initializers/smtp.rb" do
+    source "smtp.rb.erb"
+    cookbook 'rails'
+    mode "0660"
+    group deploy[:group]
+    owner deploy[:user]
+    variables(:smtp => deploy[:smtp], :environment => deploy[:rails_env])
+
+    notifies :run, resources(:execute => "restart Rails app #{application}")
+
+    only_if do
+      File.exists?("#{deploy[:deploy_to]}") && File.exists?("#{deploy[:deploy_to]}/shared/config/")
+    end
+  end
+end
+
 Chef::Log.info("Running asset precompile")
 node[:deploy].each do |application, deploy|
   rails_env = node[:deploy][application][:rails_env]
@@ -10,3 +28,4 @@ node[:deploy].each do |application, deploy|
     recursive true
   end
 end
+
