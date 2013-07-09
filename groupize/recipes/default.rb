@@ -10,7 +10,7 @@ node[:deploy].each do |application, deploy|
 
   template "#{deploy[:deploy_to]}/current/config/initializers/env_vars.rb" do
     source "env_vars.erb"
-    cookbook 'rails'
+    cookbook 'groupize'
     mode "0660"
     group deploy[:group]
     owner deploy[:user]
