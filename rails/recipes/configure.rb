@@ -44,7 +44,7 @@ node[:deploy].each do |application, deploy|
     end
   end
 
-  template "#{deploy[:deploy_to]}/current/config/initializers/smtp.rb" do
+  template "#{deploy[:deploy_to]}/shared/config/initializers/smtp.rb" do
     source "smtp.rb.erb"
     cookbook 'rails'
     mode "0660"
