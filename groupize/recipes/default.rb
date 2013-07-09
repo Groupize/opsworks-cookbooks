@@ -1,16 +1,15 @@
-
-
-Chef::Log.info("sourcing SMTP initializer")
+Chef::Log.info("sourcing environment variables initializer")
 node[:deploy].each do |application, deploy|
   deploy = node[:deploy][application]
   execute "restart Rails app #{application}" do
+    Chef::Log.debug("restarting Rails app after setting env vars")
     cwd deploy[:current_path]
     command node[:opsworks][:rails_stack][:restart_command]
     action :nothing
   end
 
-  template "#{deploy[:deploy_to]}/current/config/initializers/smtp.rb" do
-    source "smtp.rb.erb"
+  template "#{deploy[:deploy_to]}/current/config/initializers/env_vars.rb" do
+    source "env_vars.erb"
     cookbook 'rails'
     mode "0660"
     group deploy[:group]
@@ -18,6 +17,10 @@ node[:deploy].each do |application, deploy|
     variables(:smtp => deploy[:smtp], :environment => deploy[:rails_env])
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
+
+    only_if do
+      File.exists?("#{deploy[:deploy_to]}") && File.exists?("#{deploy[:deploy_to]}/current/config/")
+    end
   end
 end
 
