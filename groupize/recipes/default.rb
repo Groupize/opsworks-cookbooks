@@ -1,11 +1,14 @@
-execute "restart Rails app #{application}" do
-  cwd deploy[:current_path]
-  command node[:opsworks][:rails_stack][:restart_command]
-  action :nothing
-end
+
 
 Chef::Log.info("sourcing SMTP initializer")
 node[:deploy].each do |application, deploy|
+  deploy = node[:deploy][application]
+  execute "restart Rails app #{application}" do
+    cwd deploy[:current_path]
+    command node[:opsworks][:rails_stack][:restart_command]
+    action :nothing
+  end
+
   template "#{deploy[:deploy_to]}/current/config/initializers/smtp.rb" do
     source "smtp.rb.erb"
     cookbook 'rails'
