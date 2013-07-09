@@ -1,3 +1,9 @@
+execute "restart Rails app #{application}" do
+  cwd deploy[:current_path]
+  command node[:opsworks][:rails_stack][:restart_command]
+  action :nothing
+end
+
 Chef::Log.info("sourcing SMTP initializer")
 node[:deploy].each do |application, deploy|
   template "#{deploy[:deploy_to]}/current/config/initializers/smtp.rb" do
@@ -9,10 +15,6 @@ node[:deploy].each do |application, deploy|
     variables(:smtp => deploy[:smtp], :environment => deploy[:rails_env])
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
-
-    only_if do
-      File.exists?("#{deploy[:deploy_to]}") && File.exists?("#{deploy[:deploy_to]}/shared/config/")
-    end
   end
 end
 
