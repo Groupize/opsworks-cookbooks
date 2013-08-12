@@ -14,7 +14,7 @@ node[:deploy].each do |application, deploy|
     mode "0660"
     group deploy[:group]
     owner deploy[:user]
-    variables(:smtp => deploy[:smtp], :environment => deploy[:rails_env])
+    variables(:smtp => deploy[:smtp], :papertrail => deploy[:papertrail], :environment => deploy[:rails_env])
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
 
