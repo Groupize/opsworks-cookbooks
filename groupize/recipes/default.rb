@@ -14,6 +14,9 @@ node[:deploy].each do |application, deploy|
     mode "0660"
     group deploy[:group]
     owner deploy[:user]
+    Chef::Log.debug("Setting the papertrail variables")
+    Chef::Log.debug(deploy[:papertrail])
+    Chef::Log.debug("Done setting papertrail variables")
     variables(:smtp => deploy[:smtp], :papertrail => deploy[:papertrail], :environment => deploy[:rails_env])
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
