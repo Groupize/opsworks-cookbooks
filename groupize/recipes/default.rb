@@ -17,6 +17,9 @@ node[:deploy].each do |application, deploy|
     Chef::Log.debug("Setting the papertrail variables")
     Chef::Log.debug(deploy[:papertrail])
     Chef::Log.debug("Done setting papertrail variables")
+    Chef::Log.debug("Setting the smtp variables")
+    Chef::Log.debug(deploy[:smtp])
+    Chef::Log.debug("Done setting smtp variables")
     variables(:smtp => deploy[:smtp], :papertrail => deploy[:papertrail], :environment => deploy[:rails_env])
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
