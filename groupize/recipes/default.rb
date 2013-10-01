@@ -15,6 +15,7 @@ node[:deploy].each do |application, deploy|
     group deploy[:group]
     owner deploy[:user]
     variables(:smtp => deploy[:smtp], :environment => deploy[:rails_env])
+    Chef::Log.debug("smtp: #{@smtp.inspect}")
 
     notifies :run, resources(:execute => "restart Rails app #{application}")
 
