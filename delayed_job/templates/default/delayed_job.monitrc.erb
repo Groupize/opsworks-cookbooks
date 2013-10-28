@@ -5,7 +5,7 @@
 <% if @deploy[:env] %>
   <% @deploy[:env].each_pair do |env_var, var_val| %>
     <% unless env_var == 'PORT' || env_var == 'RACK_ENV' %>
-      <%= env_vars += ' ' + env_var + '=' + var_val %>
+      <%= env_vars += ' ' + env_var + '="' + var_val + '"' %>
     <% end %>
   <% end %>
 <% end %>
