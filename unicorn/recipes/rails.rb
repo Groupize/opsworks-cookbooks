@@ -45,4 +45,12 @@ node[:deploy].each do |application, deploy|
     source "unicorn.conf.erb"
     variables(:deploy => deploy, :application => application)
   end
+
+  template "#{deploy[:deploy_to]}/shared/config/env_vars.rb" do
+    mode '0644'
+    owner deploy[:user]
+    group deploy[:group]
+    source "env_vars.rb.erb"
+    variables(:deploy => deploy, :application => application)
+  end
 end
