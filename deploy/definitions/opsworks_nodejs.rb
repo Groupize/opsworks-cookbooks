@@ -21,7 +21,7 @@ define :opsworks_nodejs do
     variables(:database => deploy[:database], :memcached => deploy[:memcached], :layers => node[:opsworks][:layers])
   end
 
-  template "#{node[:monit][:conf_dir]}/node_web_app-#{application}.monitrc" do
+  template "#{node.default[:monit][:conf_dir]}/node_web_app-#{application}.monitrc" do
     source 'node_web_app.monitrc.erb'
     cookbook 'opsworks_nodejs'
     owner 'root'
@@ -32,6 +32,33 @@ define :opsworks_nodejs do
       :application_name => application,
       :monitored_script => "#{deploy[:deploy_to]}/current/server.js"
     )
-    notifies :restart, resources(:service => 'monit'), :immediately
+    notifies :restart, "service[monit]", :immediately
+  end
+
+  file "#{deploy[:deploy_to]}/shared/config/ssl.crt" do
+    owner deploy[:user]
+    mode 0600
+    content deploy[:ssl_certificate]
+    only_if do
+      deploy[:ssl_support]
+    end
+  end
+
+  file "#{deploy[:deploy_to]}/shared/config/ssl.key" do
+    owner deploy[:user]
+    mode 0600
+    content deploy[:ssl_certificate_key]
+    only_if do
+      deploy[:ssl_support]
+    end
+  end
+
+  file "#{deploy[:deploy_to]}/shared/config/ssl.ca" do
+    owner deploy[:user]
+    mode 0600
+    content deploy[:ssl_certificate_ca]
+    only_if do
+      deploy[:ssl_support] && deploy[:ssl_certificate_ca].present?
+    end
   end
 end

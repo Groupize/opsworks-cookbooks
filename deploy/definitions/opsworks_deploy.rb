@@ -30,18 +30,20 @@ define :opsworks_deploy do
 
     if deploy[:scm][:scm_type].to_s == 'archive'
       repository = prepare_archive_checkouts(deploy[:scm])
-      deploy[:scm] = {
+      node.set[:deploy][application][:scm] = {
         :scm_type => 'git',
         :repository => repository
       }
     elsif deploy[:scm][:scm_type].to_s == 's3'
       repository = prepare_s3_checkouts(deploy[:scm])
-      deploy[:scm] = {
+      node.set[:deploy][application][:scm] = {
         :scm_type => 'git',
         :repository => repository
       }
     end
   end
+
+  deploy = node[:deploy][application]
 
   directory "#{deploy[:deploy_to]}/shared/cached-copy" do
     recursive true
@@ -61,13 +63,18 @@ define :opsworks_deploy do
   if deploy[:scm] && deploy[:scm][:scm_type] != 'other'
     Chef::Log.debug("Checking out source code of application #{application} with type #{deploy[:application_type]}")
     deploy deploy[:deploy_to] do
+      provider Chef::Provider::Deploy.const_get(deploy[:chef_provider])
+      if deploy[:keep_releases]
+        keep_releases deploy[:keep_releases]
+      end
       repository deploy[:scm][:repository]
       user deploy[:user]
       group deploy[:group]
       revision deploy[:scm][:revision]
       migrate deploy[:migrate]
       migration_command deploy[:migrate_command]
-      environment deploy[:environment]
+      environment deploy[:environment].to_hash
+      create_dirs_before_symlink( deploy[:create_dirs_before_symlink] )
       symlink_before_migrate( deploy[:symlink_before_migrate] )
       action deploy[:action]
 
@@ -93,30 +100,33 @@ define :opsworks_deploy do
       before_migrate do
         link_tempfiles_to_current_release
 
-        if deploy[:application_type] == 'rails'
+        case deploy[:application_type]
+        when 'rails'
           if deploy[:auto_bundle_on_deploy]
             OpsWorks::RailsConfiguration.bundle(application, node[:deploy][application], release_path)
           end
 
-          node[:deploy][application][:database][:adapter] = OpsWorks::RailsConfiguration.determine_database_adapter(
+          node.default[:deploy][application][:database][:adapter] = OpsWorks::RailsConfiguration.determine_database_adapter(
             application,
-            node[:deploy][application],
+            deploy,
             release_path,
             :force => node[:force_database_adapter_detection],
-            :consult_gemfile => node[:deploy][application][:auto_bundle_on_deploy]
+            :consult_gemfile => deploy[:auto_bundle_on_deploy]
           )
-          template "#{node[:deploy][application][:deploy_to]}/shared/config/database.yml" do
-            cookbook "rails"
-            source "database.yml.erb"
-            mode "0660"
-            owner node[:deploy][application][:user]
-            group node[:deploy][application][:group]
-            variables(
-              :database => node[:deploy][application][:database],
-              :environment => node[:deploy][application][:rails_env]
-            )
+
+          deploy = node[:deploy][application]
+
+          rails_configuration "Generate opsworks configration for app #{application.inspect}" do
+            application application
+            deploy_to deploy[:deploy_to]
+            rails_env deploy[:rails_env]
+            user deploy[:user]
+            group deploy[:group]
+            database_data deploy[:database]
+            memcached_data deploy[:memcached] || {}
           end.run_action(:create)
-        elsif deploy[:application_type] == 'php'
+
+        when 'php'
           template "#{node[:deploy][application][:deploy_to]}/shared/config/opsworks.php" do
             cookbook 'php'
             source 'opsworks.php.erb'
@@ -133,7 +143,8 @@ define :opsworks_deploy do
               File.exists?("#{node[:deploy][application][:deploy_to]}/shared/config")
             end
           end
-        elsif deploy[:application_type] == 'nodejs'
+
+        when 'nodejs'
           if deploy[:auto_npm_install_on_deploy]
             OpsWorks::NodejsConfiguration.npm_install(application, node[:deploy][application], release_path)
           end
