@@ -10,3 +10,4 @@
 # depends 'opsworks_commons'
 
 depends "ruby_build"
+depends 'opsworks_rubygems
