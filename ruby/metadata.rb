@@ -11,3 +11,4 @@
 
 depends "ruby_build"
 depends 'opsworks_rubygems'
+depends 'opsworks_bundler'
